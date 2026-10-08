@@ -85,7 +85,7 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
   const showChat = messages.length > 0 || loading || error;
 
   return <section className={`article-ai ${compact ? "article-ai-compact" : ""}`}>
-    {!compact && <><span className="article-ai-label">AI-ПОМОЩНИК БУХЭКСПЕРТА</span><h2>Нужен ответ для вашей ситуации?</h2><p>Спросите AI-помощника БухЭксперта. Он подберет решение по материалам базы знаний.</p></>}
+    {!compact && <><span className="article-ai-label">AI-ПОМОЩНИК БУХЭКСПЕРТА</span><h2>Нужен ответ для вашей ситуации?</h2><p>Спросите AI-помощника БухЭксперта. Он учтёт содержание статьи и поможет разобраться в вашей ситуации.</p></>}
     {compact && <div><b>Остались вопросы по вашей ситуации в 1С?</b><p>Получите персональный ответ по материалам БухЭксперта.</p></div>}
     <div className="article-ai-form"><input ref={questionInput} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Например: как принять к учету основное средство?" aria-label="Вопрос AI по статье" />
       <button type="button" className="article-ai-button" onClick={() => ask()} disabled={loading || question.trim().length < 4}>{loading ? "Ищу…" : compact ? "Задать вопрос AI" : "Спросить AI"}</button></div>
