@@ -12,13 +12,12 @@ function newRequestId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 }
 
-export function AiAssistant({ onSubscribe, onConsult, isAuthenticated, onAuthRequired }: { onSubscribe: (location: string) => void; onConsult: (location: string) => void; isAuthenticated: boolean; onAuthRequired: () => void }) {
+export function AiAssistant({ onSubscribe, onConsult, isAuthenticated, onAuthRequired, onLoginRequired }: { onSubscribe: (location: string) => void; onConsult: (location: string) => void; isAuthenticated: boolean; onAuthRequired: () => void; onLoginRequired: () => void }) {
   const [question, setQuestion] = useState("");
   const [followUpQuestion, setFollowUpQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [demoMode, setDemoMode] = useState(true);
-  const [collapsed, setCollapsed] = useState(false);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState<{ question: string; requestId: string }>();
   const inFlight = useRef<string | null>(null);
@@ -32,7 +31,7 @@ export function AiAssistant({ onSubscribe, onConsult, isAuthenticated, onAuthReq
     if (loading || inFlight.current === requestId || normalized.length < 4) return;
     inFlight.current = requestId;
     const history: ChatTurn[] = messages.filter((item) => item.id !== requestId).map((item) => ({ role: item.role, content: item.text }));
-    setError(""); setRetry({ question: normalized, requestId }); setLoading(true); setCollapsed(false);
+    setError(""); setRetry({ question: normalized, requestId }); setLoading(true);
     setMessages((current) => current.some((item) => item.id === requestId) ? current : [...current, { id: requestId, role: "user", text: normalized }]);
     try {
       const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: normalized, idempotencyKey: requestId, conversationId: conversationId.current, history }) });
@@ -65,7 +64,7 @@ export function AiAssistant({ onSubscribe, onConsult, isAuthenticated, onAuthReq
   const followUpKeydown = (event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter") askFollowUp(); };
   const newDialog = () => {
     conversationId.current = newRequestId(); inFlight.current = null;
-    setMessages([]); setQuestion(""); setFollowUpQuestion(""); setError(""); setRetry(undefined); setCollapsed(false);
+    setMessages([]); setQuestion(""); setFollowUpQuestion(""); setError(""); setRetry(undefined);
     window.setTimeout(() => questionInput.current?.focus(), 0);
   };
   const lastAnswerId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
@@ -79,9 +78,9 @@ export function AiAssistant({ onSubscribe, onConsult, isAuthenticated, onAuthReq
     <div className="ask-shell"><span className="ask-icon" aria-hidden="true">⌕</span><input ref={questionInput} id="question" value={question} maxLength={600} onChange={(event) => setQuestion(event.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Например: как отразить лизинг в 1С?" aria-label="Вопрос AI-помощнику" /><button type="button" className="primary-btn ask-button" disabled={loading || question.trim().length < 4} onClick={() => ask()}>{loading ? "Ищу…" : <><span>Получить ответ</span><b>↗</b></>}</button></div>
     <div className="chips">{suggestions.map((item) => <button type="button" className="chip" key={item} disabled={loading} onClick={() => { setQuestion(item); ask(item); }}>{item}</button>)}</div>
     <div className="ai-meta">{demoMode && <span className="demo-label">Тестовый режим</span>}</div>
-    {showChat && <div className={`result show ${collapsed ? "result-collapsed" : ""}`}>
-      <div className="chat-controls"><button type="button" className="clear-history" onClick={() => setCollapsed((value) => !value)}>{collapsed ? "Развернуть" : "Свернуть"}</button><button type="button" className="clear-history" onClick={newDialog}>Новый диалог</button></div>
-      {!collapsed && <><div className="chat-history">{messages.map((message, index) => message.role === "user" ? messages[index + 1]?.role === "assistant" ? null : <div className="query" key={message.id}><span>?</span><div>{message.text}</div></div> : message.answer ? <AiAnswer key={message.id} question={messages[index - 1]?.text || "Вопрос"} answer={message.answer} onSubscribe={() => onSubscribe("answer_paywall")} onConsult={() => onConsult("answer_consult")} showPaywall={false} showDisclaimer={message.id === lastAnswerId} preview={!isAuthenticated} onRegister={onAuthRequired} /> : null)}</div>{loading && <div className="loader show"><i className="spinner" />Формируем ответ…</div>}{error && <div className="error-state"><b>Не удалось получить ответ</b><p>{error}</p>{retry && <button type="button" className="outline modal-button" onClick={() => void sendQuestion(retry.question, retry.requestId)}>Повторить запрос</button>}</div>}{isAuthenticated && messages.some((item) => item.role === "assistant") && <div className="chat-followup"><input value={followUpQuestion} onChange={(event) => setFollowUpQuestion(event.target.value)} onKeyDown={followUpKeydown} disabled={loading} placeholder="Уточните вашу ситуацию" aria-label="Уточняющий вопрос" /><button type="button" className="primary-btn" disabled={loading || followUpQuestion.trim().length < 4} onClick={askFollowUp}>Уточнить</button></div>}</>}
+    {showChat && <div className="result show">
+      <div className="chat-controls"><button type="button" className="clear-history" onClick={newDialog}>Новый диалог</button></div>
+      <div className="chat-history">{messages.map((message, index) => message.role === "user" ? messages[index + 1]?.role === "assistant" ? null : <div className="query" key={message.id}><span>?</span><div>{message.text}</div></div> : message.answer ? <AiAnswer key={message.id} question={messages[index - 1]?.text || "Вопрос"} answer={message.answer} onSubscribe={() => onSubscribe("answer_paywall")} onConsult={() => onConsult("answer_consult")} showPaywall={false} showDisclaimer={message.id === lastAnswerId} preview={!isAuthenticated} onRegister={onAuthRequired} onLogin={onLoginRequired} /> : null)}</div>{loading && <div className="loader show"><i className="spinner" />Формируем ответ…</div>}{error && <div className="error-state"><b>Не удалось получить ответ</b><p>{error}</p>{retry && <button type="button" className="outline modal-button" onClick={() => void sendQuestion(retry.question, retry.requestId)}>Повторить запрос</button>}</div>}{isAuthenticated && messages.some((item) => item.role === "assistant") && <div className="chat-followup"><input value={followUpQuestion} onChange={(event) => setFollowUpQuestion(event.target.value)} onKeyDown={followUpKeydown} disabled={loading} placeholder="Уточните вашу ситуацию" aria-label="Уточняющий вопрос" /><button type="button" className="primary-btn" disabled={loading || followUpQuestion.trim().length < 4} onClick={askFollowUp}>Уточнить</button></div>}
     </div>}
   </section>;
 }

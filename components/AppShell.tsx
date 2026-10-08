@@ -33,7 +33,7 @@ export function AppShell() {
     <div className="dashboard">
       <Sidebar onSubscribe={subscribe} onConsult={consult} />
       <main className="workspace">
-        <AiAssistant onSubscribe={subscribe} onConsult={consult} isAuthenticated={authenticated} onAuthRequired={openRegister} />
+        <AiAssistant onSubscribe={subscribe} onConsult={consult} isAuthenticated={authenticated} onAuthRequired={openRegister} onLoginRequired={openLogin} />
         <div className="insight-grid"><div className="feed-stack"><ContentFeed /></div><RightEventsColumn /></div>
       </main>
     </div>
