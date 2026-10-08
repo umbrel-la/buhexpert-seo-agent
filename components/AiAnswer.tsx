@@ -9,7 +9,7 @@ function AnswerText({ text, preview = false }: { text: string; preview?: boolean
 }
 
 function Disclaimer() {
-  return <p className="disclaimer">ИИ-помощник работает в тестовом режиме и может ошибаться. Перед применением проверяйте ответ по актуальным источникам; в сложных случаях уточните у эксперта, купив <a href="https://buhexpert8.ru/dostup" target="_blank" rel="noopener noreferrer">подписку</a>.</p>;
+  return <p className="disclaimer">ИИ-помощник работает в тестовом режиме и может ошибаться. Перед применением проверяйте ответ по актуальным источникам; в сложных случаях уточните у эксперта.</p>;
 }
 
 export function Paywall({ onSubscribe, onConsult }: { onSubscribe: () => void; onConsult: () => void }) {
