@@ -13,7 +13,6 @@ import { AuthModal, ConsultationModal, SubscriptionModal } from "./Modals";
 
 const slug = "os-v-1c-8-3";
 const suggested = ["Как принять ОС с дополнительными расходами?", "Какие документы проверить перед принятием ОС?", "Как проверить параметры амортизации?"];
-const safetyNote = "ИИ-помощник работает в тестовом режиме и может ошибаться. Перед применением проверяйте ответ по актуальным источникам; в сложных случаях уточните у эксперта.";
 
 function newRequestId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -89,7 +88,6 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
   return <section className={`article-ai ${compact ? "article-ai-compact" : ""}`}>
     {!compact && <><span className="article-ai-label">AI-ПОМОЩНИК БУХЭКСПЕРТА</span><h2>Нужен ответ для вашей ситуации?</h2><p>Спросите AI-помощника БухЭксперта. Он подберет решение по материалам базы знаний.</p></>}
     {compact && <div><b>Остались вопросы по вашей ситуации в 1С?</b><p>Получите персональный ответ по материалам БухЭксперта.</p></div>}
-    <p className="demo-note">{safetyNote}</p>
     <div className="article-ai-form"><input ref={questionInput} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Например: как принять к учету основное средство?" aria-label="Вопрос AI по статье" />
       <button type="button" className="article-ai-button" onClick={() => ask()} disabled={loading || question.trim().length < 4}>{loading ? "Ищу…" : compact ? "Задать вопрос AI" : "Спросить AI"}</button></div>
     <div className="article-ai-chips">{(compact ? suggested.slice(0, 2) : suggested).map((item) => <button type="button" key={item} onClick={() => { setQuestion(item); ask(item); }} disabled={loading}>{item}</button>)}</div>
