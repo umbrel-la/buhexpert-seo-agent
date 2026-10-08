@@ -1,0 +1,11 @@
+/* Keep the secondary article AI widget readable instead of compressing its copy. */
+.article-ai-compact{display:block;padding:22px 24px}
+.article-ai-compact>div:first-child{max-width:680px}
+.article-ai-compact>div:first-child b{display:block;color:#fff;font-size:17px;margin-bottom:6px}
+.article-ai-compact>div:first-child p{margin:0 0 16px;line-height:1.55}
+.article-ai-compact .article-ai-form{display:grid;grid-template-columns:minmax(0,1fr) auto;max-width:700px;margin:0 0 12px}
+.article-ai-compact .article-ai-form input{width:100%;min-height:46px}
+.article-ai-compact .article-ai-button{min-height:46px;white-space:nowrap}
+.article-ai-compact small{display:block;line-height:1.5}
+.article-ai-compact .article-reset-limit{display:inline;margin:4px 0 0;padding:0;border:0;background:none;color:#ceb0ff;text-decoration:underline;cursor:pointer}
+@media(max-width:760px){.article-ai-compact{padding:18px}.article-ai-compact .article-ai-form{grid-template-columns:1fr}.article-ai-compact .article-ai-button{padding:12px 16px}}
