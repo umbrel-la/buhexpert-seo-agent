@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { answerPreview, createAiAnswer } from "@/lib/ai";
 import { getServerSession } from "@/lib/auth";
 import { searchMaterials } from "@/lib/search";
+import { getArticleContext } from "@/data/article-context";
 import type { ChatResponse, ChatTurn } from "@/types";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
   const idempotencyKey = typeof body === "object" && body && "idempotencyKey" in body ? String(body.idempotencyKey) : "";
   const history = typeof body === "object" && body && "history" in body ? parseHistory(body.history) : [];
   const conversationId = typeof body === "object" && body && "conversationId" in body ? String(body.conversationId) : "";
+  const articleSlug = typeof body === "object" && body && "articleSlug" in body ? String(body.articleSlug).trim() : "";
   if (question.length < 4 || question.length > 600) {
     return NextResponse.json({ error: "Введите вопрос длиной от 4 до 600 символов." }, { status: 400 });
   }
@@ -50,18 +52,20 @@ export async function POST(request: NextRequest) {
   }
   if (!history) return NextResponse.json({ error: "Некорректная история диалога." }, { status: 400 });
   if (!/^[A-Za-z0-9_-]{16,120}$/.test(conversationId)) return NextResponse.json({ error: "Не удалось подтвердить сессию диалога." }, { status: 400 });
+  const article = articleSlug ? getArticleContext(articleSlug) : null;
+  if (articleSlug && !article) return NextResponse.json({ error: "Статья для контекста не найдена." }, { status: 400 });
   const totalHistoryCharacters = history.reduce((total, turn) => total + turn.content.length, 0) + question.length;
   if (totalHistoryCharacters > MAX_HISTORY_CHARACTERS) {
     return NextResponse.json({ error: "Диалог стал слишком длинным для одного запроса. Начните новый диалог, чтобы продолжить." }, { status: 413 });
   }
   const session = await getServerSession(request);
   const sessionScope = session.authenticated && session.userId ? `user:${session.userId}` : `${session.mode}:${conversationId}`;
-  const cacheKey = `${sessionScope}:${idempotencyKey}`;
+  const cacheKey = `${sessionScope}:${articleSlug || "no-article"}:${idempotencyKey}`;
   cleanCache();
   const cached = requestCache.get(cacheKey);
   if (cached) return NextResponse.json(cached.response);
   try {
-    const answerPromise = pendingRequests.get(cacheKey) || createAiAnswer(question, searchMaterials(question), Number.MAX_SAFE_INTEGER, history);
+    const answerPromise = pendingRequests.get(cacheKey) || createAiAnswer(question, searchMaterials(question), Number.MAX_SAFE_INTEGER, history, article);
     pendingRequests.set(cacheKey, answerPromise);
     const generated = await answerPromise;
     const canReceiveFullAnswer = session.mode === "demo" || session.authenticated;

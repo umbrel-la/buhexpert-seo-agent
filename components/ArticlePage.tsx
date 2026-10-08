@@ -49,7 +49,7 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
     setError(""); setRetry({ question: normalized, requestId }); setLoading(true); setCollapsed(false);
     setMessages((current) => current.some((item) => item.id === requestId) ? current : [...current, { id: requestId, role: "user", text: normalized }]);
     try {
-      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: normalized, idempotencyKey: requestId, conversationId: conversationId.current, history }) });
+      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: normalized, idempotencyKey: requestId, conversationId: conversationId.current, articleSlug: slug, history }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Не удалось получить ответ.");
       const answer = data as ChatResponse;
@@ -99,7 +99,6 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
       {!collapsed && <><div className="chat-history">{messages.map((message, index) => message.role === "assistant" && message.answer ? <div key={message.id}><AiAnswer question={messages[index - 1]?.text || "Вопрос"} answer={message.answer} onSubscribe={() => { trackEvent("article_full_access_click", { article_slug: slug }); onSubscribe("article_answer"); }} onConsult={() => onConsult("article_answer")} showPaywall={false} showDisclaimer={message.id === lastAnswerId} preview={!isAuthenticated} onRegister={onAuthRequired} /></div> : null)}</div>
         {loading && <div className="loader show"><i className="spinner" />Формируем ответ…</div>}
         {error && <div className="error-state"><b>Не удалось получить ответ</b><p>{error}</p>{retry && <button type="button" className="outline modal-button" onClick={() => void sendQuestion(retry.question, retry.requestId)}>Повторить запрос</button>}</div>}
-        {messages.some((item) => item.role === "assistant") && <Link className="personalized-link" href="/personalized-answers">Открыть последний ответ отдельно</Link>}
         {isAuthenticated && messages.some((item) => item.role === "assistant") && <div className="chat-followup"><input value={followUpQuestion} onChange={(event) => setFollowUpQuestion(event.target.value)} onKeyDown={followUpKeydown} disabled={loading} placeholder="Уточните вашу ситуацию" aria-label="Уточняющий вопрос" /><button type="button" className="article-ai-button" disabled={loading || followUpQuestion.trim().length < 4} onClick={askFollowUp}>Уточнить</button></div>}</>}
     </div>}
   </section>;
