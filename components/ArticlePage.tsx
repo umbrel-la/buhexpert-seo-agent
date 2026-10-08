@@ -96,10 +96,10 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
   const showChat = messages.length > 0 || loading || error;
 
   return <section ref={widget} className={`article-ai ${compact ? "article-ai-compact" : ""}`}>
-    {!compact && <><div className="article-ai-heading"><span className="article-ai-spark" aria-hidden="true">✦</span><span className="article-ai-label">AI-ПОМОЩНИК БУХЭКСПЕРТА</span><span className="article-ai-context">В контексте статьи</span></div><h2>Нужен ответ <span>для вашей ситуации?</span></h2><p>Спросите AI-помощника БухЭксперта. Он учтёт содержание статьи и поможет разобраться в вашей ситуации.</p></>}
+    {!compact && <><div className="article-ai-heading"><span className="article-ai-spark" aria-hidden="true">✦</span><span className="article-ai-label">ИИ-ПОМОЩНИК БУХЭКСПЕРТА</span><span className="article-ai-context">В контексте статьи</span></div><h2>Нужен ответ <span>для вашей ситуации?</span></h2><p>Спросите ИИ-помощника БухЭксперта. Он учтёт содержание статьи и поможет разобраться в вашей ситуации.</p></>}
     {compact && <div><b>Остались вопросы по вашей ситуации в 1С?</b><p>Получите персональный ответ по материалам БухЭксперта.</p></div>}
-    <div className="article-ai-form"><input ref={questionInput} value={question} maxLength={600} onChange={(e) => setQuestion(e.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Что хотите уточнить по статье?" aria-label="Вопрос AI по статье" />
-      <button type="button" className="article-ai-button" onClick={() => question.trim().length < 4 ? questionInput.current?.focus() : ask()} disabled={loading}>{loading ? "Готовим ответ…" : <>{compact ? "Задать вопрос AI" : "Спросить AI"}<span aria-hidden="true">↗</span></>}</button></div>
+    <div className="article-ai-form"><input ref={questionInput} value={question} maxLength={600} onChange={(e) => setQuestion(e.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Что хотите уточнить по статье?" aria-label="Вопрос ИИ по статье" />
+      <button type="button" className="article-ai-button" onClick={() => question.trim().length < 4 ? questionInput.current?.focus() : ask()} disabled={loading}>{loading ? "Готовим ответ…" : <>{compact ? "Задать вопрос ИИ" : "Спросить ИИ"}<span aria-hidden="true">↗</span></>}</button></div>
     <div className="article-ai-examples">Можно начать с одного из вопросов <span aria-hidden="true">↓</span></div>
     <div className="article-ai-chips">{(compact ? suggested.slice(0, 2) : suggested).map((item) => <button type="button" key={item} onClick={() => { setQuestion(item); ask(item); }} disabled={loading}>{item}</button>)}</div>
     {showChat && <div className="article-ai-result">
@@ -140,8 +140,7 @@ export function ArticlePage() {
       <p>Полезно заранее посмотреть <a href="#control">контроль результата</a> и сверить его с первоначальной информацией об объекте.</p>
       <h2 id="control">Контроль результата</h2><p>После проведения проверьте карточку объекта и движения документа. Если данные отличаются от ожидаемых, остановитесь и перепроверьте исходные документы, настройки учета и период операции.</p>
       <h2 id="extra-costs">Если есть дополнительные расходы</h2><p>Не объединяйте разные ситуации автоматически. Проверьте, относятся ли расходы к конкретному объекту, подтверждены ли они документами и как это предусмотрено в вашей настройке учета.</p>
-      <ArticleAi compact onSubscribe={subscribe} onConsult={consult} isAuthenticated={authenticated} onAuthRequired={openRegister} onLoginRequired={openLogin} />
-      <section className="see-also"><h2>См. также</h2><a href="#control">Проверка принятия ОС к учету в 1С</a><a href="#extra-costs">Дополнительные расходы при принятии ОС</a><Link href="/">Вернуться к AI-помощнику БухЭксперта</Link></section>
+      <section className="see-also"><h2>См. также</h2><a href="#control">Проверка принятия ОС к учету в 1С</a><a href="#extra-costs">Дополнительные расходы при принятии ОС</a><Link href="/">Вернуться к ИИ-помощнику БухЭксперта</Link></section>
     </article></main>
     <aside className="article-toc"><b>Содержание</b><a href="#what-you-learn">Что вы узнаете</a><a href="#before-start">Подготовка документов</a><a href="#document">Принятие к учету</a><a href="#control">Контроль результата</a><a href="#extra-costs">Дополнительные расходы</a></aside>
   </div>{modal === "subscription" && <SubscriptionModal onClose={() => setModal(null)} />}{modal === "consultation" && <ConsultationModal onClose={() => setModal(null)} />}{authModal && <AuthModal mode={authModal} onClose={() => setAuthModal(null)} onAuthenticated={() => { setAuthenticated(true); setAuthModal(null); }} onSwitch={setAuthModal} />}</>;

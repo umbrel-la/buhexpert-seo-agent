@@ -6,8 +6,8 @@ import "./article-fixes.css";
 import "./personalized.css";
 
 export const metadata: Metadata = {
-  title: "БухЭксперт — AI-помощник по 1С",
-  description: "Демонстрационный AI-помощник по материалам БухЭксперта",
+  title: "БухЭксперт — ИИ-помощник по 1С",
+  description: "Демонстрационный ИИ-помощник по материалам БухЭксперта",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

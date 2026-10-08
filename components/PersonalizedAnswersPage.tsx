@@ -154,7 +154,7 @@ export function PersonalizedAnswersPage() {
             <b>Хотите спросить по своему случаю?</b>
             <div className="personalized-ask-row">
               <input value={followUp} onChange={(event) => setFollowUp(event.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Например: какие расходы включить в стоимость ОС?" aria-label="Уточняющий вопрос" />
-              <button type="button" onClick={() => ask()} disabled={loading || followUp.trim().length < 4}>{loading ? "Ищу…" : "Спросить AI"}</button>
+              <button type="button" onClick={() => ask()} disabled={loading || followUp.trim().length < 4}>{loading ? "Ищу…" : "Спросить ИИ"}</button>
             </div>
             <div className="personalized-suggestions">{suggestions.map((question) =>
               <button type="button" key={question} disabled={loading} onClick={() => ask(question)}>{question}</button>
