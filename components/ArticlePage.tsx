@@ -19,7 +19,7 @@ function newRequestId() {
 }
 
 function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthenticated, onAuthRequired, onLoginRequired }: { compact?: boolean; initialQuestion?: string; onSubscribe: (location: string) => void; onConsult: (location: string) => void; isAuthenticated: boolean; onAuthRequired: () => void; onLoginRequired: () => void }) {
-  const [question, setQuestion] = useState(compact ? "" : initialQuestion || "Например: как принять к учету основное средство с дополнительными расходами?");
+  const [question, setQuestion] = useState(compact ? "" : initialQuestion || "");
   const [followUpQuestion, setFollowUpQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,9 +28,20 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
   const conversationId = useRef(newRequestId());
   const inFlight = useRef<string | null>(null);
   const questionInput = useRef<HTMLInputElement>(null);
+  const widget = useRef<HTMLElement>(null);
 
   useEffect(() => {
     trackEvent("article_ai_widget_view", { article_slug: slug });
+    const element = widget.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        element.classList.add("article-ai-visible");
+        observer.disconnect();
+      }
+    }, { threshold: 0.15 });
+    observer.observe(element);
+    return () => observer.disconnect();
   }, []);
 
   const sendQuestion = async (value: string, requestId = newRequestId()) => {
@@ -84,16 +95,17 @@ function ArticleAi({ compact, initialQuestion, onSubscribe, onConsult, isAuthent
   const lastAnswerId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
   const showChat = messages.length > 0 || loading || error;
 
-  return <section className={`article-ai ${compact ? "article-ai-compact" : ""}`}>
-    {!compact && <><span className="article-ai-label">AI-ПОМОЩНИК БУХЭКСПЕРТА</span><h2>Нужен ответ для вашей ситуации?</h2><p>Спросите AI-помощника БухЭксперта. Он учтёт содержание статьи и поможет разобраться в вашей ситуации.</p></>}
+  return <section ref={widget} className={`article-ai ${compact ? "article-ai-compact" : ""}`}>
+    {!compact && <><div className="article-ai-heading"><span className="article-ai-spark" aria-hidden="true">✦</span><span className="article-ai-label">AI-ПОМОЩНИК БУХЭКСПЕРТА</span><span className="article-ai-context">В контексте статьи</span></div><h2>Нужен ответ <span>для вашей ситуации?</span></h2><p>Спросите AI-помощника БухЭксперта. Он учтёт содержание статьи и поможет разобраться в вашей ситуации.</p></>}
     {compact && <div><b>Остались вопросы по вашей ситуации в 1С?</b><p>Получите персональный ответ по материалам БухЭксперта.</p></div>}
-    <div className="article-ai-form"><input ref={questionInput} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Например: как принять к учету основное средство?" aria-label="Вопрос AI по статье" />
-      <button type="button" className="article-ai-button" onClick={() => ask()} disabled={loading || question.trim().length < 4}>{loading ? "Ищу…" : compact ? "Задать вопрос AI" : "Спросить AI"}</button></div>
+    <div className="article-ai-form"><input ref={questionInput} value={question} maxLength={600} onChange={(e) => setQuestion(e.target.value)} onKeyDown={keydown} disabled={loading} placeholder="Что хотите уточнить по статье?" aria-label="Вопрос AI по статье" />
+      <button type="button" className="article-ai-button" onClick={() => question.trim().length < 4 ? questionInput.current?.focus() : ask()} disabled={loading}>{loading ? "Готовим ответ…" : <>{compact ? "Задать вопрос AI" : "Спросить AI"}<span aria-hidden="true">↗</span></>}</button></div>
+    <div className="article-ai-examples">Можно начать с одного из вопросов <span aria-hidden="true">↓</span></div>
     <div className="article-ai-chips">{(compact ? suggested.slice(0, 2) : suggested).map((item) => <button type="button" key={item} onClick={() => { setQuestion(item); ask(item); }} disabled={loading}>{item}</button>)}</div>
     {showChat && <div className="article-ai-result">
       <div className="chat-controls"><button type="button" className="clear-history" onClick={newDialog}>Новый диалог</button></div>
       <div className="chat-history">{messages.map((message, index) => message.role === "assistant" && message.answer ? <div key={message.id}><AiAnswer question={messages[index - 1]?.text || "Вопрос"} answer={message.answer} onSubscribe={() => { trackEvent("article_full_access_click", { article_slug: slug }); onSubscribe("article_answer"); }} onConsult={() => onConsult("article_answer")} showPaywall={false} showDisclaimer={message.id === lastAnswerId} preview={!isAuthenticated} onRegister={onAuthRequired} onLogin={onLoginRequired} /></div> : null)}</div>
-        {loading && <div className="loader show"><i className="spinner" />Формируем ответ…</div>}
+        {loading && <div className="loader show article-ai-thinking" role="status"><span className="article-ai-dots" aria-hidden="true"><i /><i /><i /></span>Готовим ответ с учётом статьи…</div>}
         {error && <div className="error-state"><b>Не удалось получить ответ</b><p>{error}</p>{retry && <button type="button" className="outline modal-button" onClick={() => void sendQuestion(retry.question, retry.requestId)}>Повторить запрос</button>}</div>}
         {isAuthenticated && messages.some((item) => item.role === "assistant") && <div className="chat-followup"><input value={followUpQuestion} onChange={(event) => setFollowUpQuestion(event.target.value)} onKeyDown={followUpKeydown} disabled={loading} placeholder="Уточните вашу ситуацию" aria-label="Уточняющий вопрос" /><button type="button" className="article-ai-button" disabled={loading || followUpQuestion.trim().length < 4} onClick={askFollowUp}>Уточнить</button></div>}
     </div>}
